@@ -1,6 +1,11 @@
-[English](/README.md) | [Chinese](/README.zh.md) | [Español](/README.es_ES.md)
+[English](/README.md) | [فارسی](/README.fa_IR.md) | [中文](/README.zh_CN.md) | [Español](/README.es_ES.md) | [Русский](/README.ru_RU.md)
 
-<p align="center"><a href="#"><img src="./media/3X-UI.png" alt="Image"></a></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./media/3x-ui-dark.png">
+    <img alt="3x-ui" src="./media/3x-ui-light.png">
+  </picture>
+</p>
 
 **An Advanced Web Panel • Built on Xray Core**
 
@@ -14,9 +19,15 @@
 
 **If this project is helpful to you, you may wish to give it a**:star2:
 
-<p align="left"><a href="#"><img width="125" src="https://github.com/MHSanaei/3x-ui/assets/115543613/7aa895dd-048a-42e7-989b-afd41a74e2e1" alt="Image"></a></p>
+<p align="left">
+  <a href="https://buymeacoffee.com/mhsanaei" target="_blank">
+    <img src="./media/buymeacoffe.png" alt="Image">
+  </a>
+</p>
 
 - USDT (TRC20): `TXncxkvhkDWGts487Pjqq1qT9JmwRUz8CC`
+- MATIC (polygon): `0x41C9548675D044c6Bfb425786C765bc37427256A`
+- LTC (Litecoin): `ltc1q2ach7x6d2zq0n4l0t4zl7d7xe2s6fs7a3vspwv`
 
 ## Install & Upgrade
 
@@ -24,12 +35,12 @@
 bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
 ```
 
-## Install Custom Version
+## Install legacy Version (we don't recommend)
 
-To install your desired version, add the version to the end of the installation command. e.g., ver `v2.3.6`:
+To install your desired version, use following installation command. e.g., ver `v1.7.9`:
 
 ```
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) v2.3.6
+VERSION=v1.7.9 && bash <(curl -Ls "https://raw.githubusercontent.com/mhsanaei/3x-ui/$VERSION/install.sh") $VERSION
 ```
 
 ## SSL Certificate
@@ -42,12 +53,14 @@ bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.
 To manage SSL certificates using ACME:
 
 1. Ensure your domain is correctly resolved to the server.
-2. Access the `x-ui` command and navigate to `SSL Certificate Management`.
+2. Run the `x-ui` command in the terminal, then choose `SSL Certificate Management`.
 3. You will be presented with the following options:
 
    - **Get SSL:** Obtain SSL certificates.
    - **Revoke:** Revoke existing SSL certificates.
    - **Force Renew:** Force renewal of SSL certificates.
+   - **Show Existing Domains:** Display all domain certificates available on the server.  
+   - **Set Certificate Paths for the Panel:** Specify the certificate for your domain to be used by the panel. 
 
 ### Certbot
 
@@ -163,6 +176,8 @@ systemctl restart x-ui
    docker compose up -d
    ```
 
+  Add ```--pull always``` flag to make docker automatically recreate container if a newer image is pulled. See https://docs.docker.com/reference/cli/docker/container/run/#pull for more info.
+
    **OR**
 
    ```sh
@@ -196,21 +211,59 @@ systemctl restart x-ui
 
 </details>
 
+## Nginx Settings
+<details>
+  <summary>Click for Reverse Proxy Configuration</summary>
+
+#### Nginx Reverse Proxy
+```nginx
+location / {
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Range $http_range;
+    proxy_set_header If-Range $http_if_range; 
+    proxy_redirect off;
+    proxy_pass http://127.0.0.1:2053;
+}
+```
+
+#### Nginx sub-path
+- Ensure that the "URI Path" in the `/sub` panel settings is the same.
+- The `url` in the panel settings needs to end with `/`.   
+
+```nginx
+location /sub {
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Range $http_range;
+    proxy_set_header If-Range $http_if_range; 
+    proxy_redirect off;
+    proxy_pass http://127.0.0.1:2053;
+}
+```
+</details>
 
 ## Recommended OS
 
 - Ubuntu 20.04+
 - Debian 11+
 - CentOS 8+
+- OpenEuler 22.03+
 - Fedora 36+
 - Arch Linux
 - Parch Linux
 - Manjaro
 - Armbian
-- AlmaLinux 9+
-- Rocky Linux 9+
+- AlmaLinux 8.0+
+- Rocky Linux 8+
 - Oracle Linux 8+
 - OpenSUSE Tubleweed
+- Amazon Linux 2023
+- Windows x64
 
 ## Supported Architectures and Devices
 
@@ -237,13 +290,17 @@ Our platform offers compatibility with a diverse range of architectures and devi
 ## Languages
 
 - English
-- Farsi
-- Chinese
+- Persian
+- Traditional Chinese
+- Simplified Chinese
+- Japanese
 - Russian
 - Vietnamese
 - Spanish
-- Indonesian 
+- Indonesian
 - Ukrainian
+- Turkish
+- Português (Brazil)
 
 
 ## Features
@@ -252,7 +309,7 @@ Our platform offers compatibility with a diverse range of architectures and devi
 - Search within all inbounds and clients
 - Dark/Light theme
 - Supports multi-user and multi-protocol
-- Supports protocols, including VMess, VLESS, Trojan, Shadowsocks, Dokodemo-door, Socks, HTTP, wireguard
+- Supports protocols, including VMESS, VLESS, Trojan, Shadowsocks, Dokodemo-door, Socks, HTTP, wireguard
 - Supports XTLS native Protocols, including RPRX-Direct, Vision, REALITY
 - Traffic statistics, traffic limit, expiration time limit
 - Customizable Xray configuration templates
@@ -269,30 +326,42 @@ Our platform offers compatibility with a diverse range of architectures and devi
 <details>
   <summary>Click for default settings details</summary>
 
-  ### Information
+### Username, Password, Port, and Web Base Path
 
-- **Port:** 
-  - 2053
-- **Username & Password & webbasepath:** 
+If you choose not to modify these settings, they will be generated randomly (this does not apply to Docker).
 
-  These will be generated randomly if you skip modifying them.
+**Default Settings for Docker:**
+- **Username:** admin
+- **Password:** admin
+- **Port:** 2053
 
-- **Database Management:**
+### Database Management:
 
-  You can conveniently perform database backups and restores directly from the panel.
+  You can conveniently perform database Backups and Restores directly from the panel.
 
 - **Database Path:**
   - `/etc/x-ui/x-ui.db`
 
-- **Web Base Path:**
 
-  The `webbasepath` will be generated randomly if you skip modifying it, or you can use your custom path.
-  
-  You can view your current settings using the `View Current Settings` or `x-ui settings`.
-  
-  We recommend using a long random word for more security in the URL structure: 
-  - http://ip:port/*webbasepath*/panel
-  - http://domain:port/*webbasepath*/panel
+### Web Base Path
+
+1. **Reset Web Base Path:**
+   - Open your terminal.
+   - Run the `x-ui` command.
+   - Select the option to `Reset Web Base Path`.
+
+2. **Generate or Customize Path:**
+   - The path will be randomly generated, or you can enter a custom path.
+
+3. **View Current Settings:**
+   - To view your current settings, use the `x-ui settings` command in the terminal or `View Current Settings` in `x-ui`
+
+### Security Recommendation:
+- For enhanced security, use a long, random word in your URL structure.
+
+**Examples:**
+- `http://ip:port/*webbasepath*/panel`
+- `http://domain:port/*webbasepath*/panel`
 
 </details>
 
@@ -306,28 +375,6 @@ Our platform offers compatibility with a diverse range of architectures and devi
 **For versions `v2.1.0` and later:**
 
 WARP is built-in, and no additional installation is required. Simply turn on the necessary configuration in the panel.
-
-**For versions before `v2.1.0`:**
-
-**1.** Install WARP in **SOCKS Proxy Mode**:
-
-   ```sh
-   bash <(curl -sSL https://raw.githubusercontent.com/hamid-gh98/x-ui-scripts/main/install_warp_proxy.sh)
-   ```
-
-**2.** If you already have WARP installed, you can uninstall it using the command below:
-
-   ```sh
-   warp u
-   ```
-
-**3.** Enable the configuration you need in the panel.
-
-   Config Features:
-
-   - Block Ads
-   - Route Google, Netflix, Spotify, and OpenAI (ChatGPT) traffic to WARP
-   - Fix Google 403 error
 
 </details>
 
@@ -343,12 +390,22 @@ WARP is built-in, and no additional installation is required. Simply turn on the
 - **For versions up to `v1.6.1`:**
   - The IP limit is built-in to the panel
 
-- **For versions `v1.7.0` and newer:**
-  - To enable IP Limit functionality, you need to install `fail2ban` and its required files by following these steps:
-    1. Use the `x-ui` command inside the shell.
-    2. Select `IP Limit Management`.
-    3. Choose the appropriate options based on your needs.
-   
+**For versions `v1.7.0` and newer:**
+
+To enable the IP Limit functionality, you need to install `fail2ban` and its required files by following these steps:
+
+1. Run the `x-ui` command in the terminal, then choose `IP Limit Management`.
+2. You will see the following options:
+
+   - **Change Ban Duration:** Adjust the duration of bans.
+   - **Unban Everyone:** Lift all current bans.
+   - **Check Logs:** Review the logs.
+   - **Fail2ban Status:** Check the status of `fail2ban`.
+   - **Restart Fail2ban:** Restart the `fail2ban` service.
+   - **Uninstall Fail2ban:** Uninstall Fail2ban with configuration.
+
+3. Add a path for the access log on the panel by setting `Xray Configs/log/Access log` to `./access.log` then save and restart xray.
+
 - **For versions before `v2.1.3`:**
   - You need to set the access log path manually in your Xray configuration:
 
@@ -400,19 +457,19 @@ The web panel supports daily traffic, panel login, database backup, system statu
 - Threshold for Expiration time and Traffic to report in advance
 - Support client report menu if client's telegram username added to the user's configurations
 - Support telegram traffic report searched with UUID (VMESS/VLESS) or Password (TROJAN) - anonymously
-- Menu based bot
-- Search client by email ( only admin )
+- Menu-based bot
+- Search client by email (only admin)
 - Check all inbounds
 - Check server status
 - Check depleted users
 - Receive backup by request and in periodic reports
-- Multi language bot
+- Multi-language bot
 
 ### Setting up Telegram bot
 
 - Start [Botfather](https://t.me/BotFather) in your Telegram account:
     ![Botfather](./media/botfather.png)
-  
+
 - Create a new Bot using /newbot command: It will ask you 2 questions, A name and a username for your bot. Note that the username has to end with the word "bot".
     ![Create new bot](./media/newbot.png)
 
@@ -437,6 +494,7 @@ Enter the user ID in input field number 4. The Telegram accounts with this id wi
 
 #### Usage
 
+- [API Documentation](https://www.postman.com/hsanaei/3x-ui/collection/q1l5l0u/3x-ui)
 - `/login` with `POST` user data: `{username: '', password: ''}` for login
 - `/panel/api/inbounds` base for following actions:
 
@@ -445,6 +503,7 @@ Enter the user ID in input field number 4. The Telegram accounts with this id wi
 | `GET`  | `"/list"`                          | Get all inbounds                            |
 | `GET`  | `"/get/:id"`                       | Get inbound with inbound.id                 |
 | `GET`  | `"/getClientTraffics/:email"`      | Get Client Traffics with email              |
+| `GET`  | `"/getClientTrafficsById/:id"`     | Get client's traffic By ID |
 | `GET`  | `"/createbackup"`                  | Telegram bot sends backup to admins         |
 | `POST` | `"/add"`                           | Add inbound                                 |
 | `POST` | `"/del/:id"`                       | Delete Inbound                              |
@@ -466,9 +525,7 @@ Enter the user ID in input field number 4. The Telegram accounts with this id wi
 - `client.password` for TROJAN
 - `client.email` for Shadowsocks
 
-
-- [API Documentation](https://documenter.getpostman.com/view/16802678/2s9YkgD5jm)
-- [<img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;">](https://app.getpostman.com/run-collection/16802678-1a4c9270-ac77-40ed-959a-7aa56dc4a415?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D16802678-1a4c9270-ac77-40ed-959a-7aa56dc4a415%26entityType%3Dcollection%26workspaceId%3D2cd38c01-c851-4a15-a972-f181c23359d9)
+- [<img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;">](https://app.getpostman.com/run-collection/5146551-dda3cab3-0e33-485f-96f9-d4262f437ac5?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D5146551-dda3cab3-0e33-485f-96f9-d4262f437ac5%26entityType%3Dcollection%26workspaceId%3Dd64f609f-485a-4951-9b8f-876b3f917124)
 </details>
 
 ## Environment Variables
@@ -496,13 +553,34 @@ XUI_BIN_FOLDER="bin" XUI_DB_FOLDER="/etc/x-ui" go build main.go
 
 ## Preview
 
-![1](./media/1.png)
-![2](./media/2.png)
-![3](./media/3.png)
-![4](./media/4.png)
-![5](./media/5.png)
-![6](./media/6.png)
-![7](./media/7.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./media/01-overview-dark.png">
+  <img alt="3x-ui" src="./media/01-overview-light.png">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./media/02-inbounds-dark.png">
+  <img alt="3x-ui" src="./media/02-inbounds-light.png">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./media/03-add-inbound-dark.png">
+  <img alt="3x-ui" src="./media/03-add-inbound-light.png">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./media/04-add-client-dark.png">
+  <img alt="3x-ui" src="./media/04-add-client-light.png">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./media/05-settings-dark.png">
+  <img alt="3x-ui" src="./media/05-settings-light.png">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./media/06-configs-dark.png">
+  <img alt="3x-ui" src="./media/06-configs-light.png">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./media/07-bot-dark.png">
+  <img alt="3x-ui" src="./media/07-bot-light.png">
+</picture>
 
 ## A Special Thanks to
 
@@ -511,8 +589,8 @@ XUI_BIN_FOLDER="bin" XUI_DB_FOLDER="/etc/x-ui" go build main.go
 ## Acknowledgment
 
 - [Iran v2ray rules](https://github.com/chocolate4u/Iran-v2ray-rules) (License: **GPL-3.0**): _Enhanced v2ray/xray and v2ray/xray-clients routing rules with built-in Iranian domains and a focus on security and adblocking._
-- [Vietnam Adblock rules](https://github.com/vuong2023/vn-v2ray-rules) (License: **GPL-3.0**): _A hosted domain hosted in Vietnam and blocklist with the most efficiency for Vietnamese._
+- [Russia v2ray rules](https://github.com/runetfreedom/russia-v2ray-rules-dat) (License: **GPL-3.0**): _This repository contains automatically updated V2Ray routing rules based on data on blocked domains and addresses in Russia._
 
 ## Stargazers over Time
 
-[![Stargazers over time](https://starchart.cc/MHSanaei/3x-ui.svg)](https://starchart.cc/MHSanaei/3x-ui)
+[![Stargazers over time](https://starchart.cc/MHSanaei/3x-ui.svg?variant=adaptive)](https://starchart.cc/MHSanaei/3x-ui)

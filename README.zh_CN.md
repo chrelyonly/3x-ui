@@ -1,6 +1,11 @@
-[English](/README.md) | [Chinese](/README.zh.md) | [Español](/README.es_ES.md)
+[English](/README.md) | [فارسی](/README.fa_IR.md) | [中文](/README.zh_CN.md) | [Español](/README.es_ES.md) | [Русский](/README.ru_RU.md)
 
-<p align="center"><a href="#"><img src="./media/3X-UI.png" alt="Image"></a></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./media/3x-ui-dark.png">
+    <img alt="3x-ui" src="./media/3x-ui-light.png">
+  </picture>
+</p>
 
 **一个更好的面板 • 基于Xray Core构建**
 
@@ -14,9 +19,15 @@
 
 **如果此项目对你有用，请给一个**:star2:
 
-<p align="left"><a href="#"><img width="125" src="https://github.com/MHSanaei/3x-ui/assets/115543613/7aa895dd-048a-42e7-989b-afd41a74e2e1" alt="Image"></a></p>
+<p align="left">
+  <a href="https://buymeacoffee.com/mhsanaei" target="_blank">
+    <img src="./media/buymeacoffe.png" alt="Image">
+  </a>
+</p>
 
 - USDT (TRC20): `TXncxkvhkDWGts487Pjqq1qT9JmwRUz8CC`
+- MATIC (polygon): `0x41C9548675D044c6Bfb425786C765bc37427256A`
+- LTC (Litecoin): `ltc1q2ach7x6d2zq0n4l0t4zl7d7xe2s6fs7a3vspwv`
 
 ## 安装 & 升级
 
@@ -24,38 +35,62 @@
 bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
 ```
 
-## 安装指定版本
+## 安装旧版本 (我们不建议)
 
-要安装所需的版本，请将该版本添加到安装命令的末尾。 e.g., ver `v2.3.6`:
+要安装您想要的版本，请使用以下安装命令。例如，ver `v1.7.9`:
 
 ```
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh) v2.3.6
+VERSION=v1.7.9 && <(curl -Ls "https://raw.githubusercontent.com/mhsanaei/3x-ui/$VERSION/install.sh") $VERSION
 ```
 
-## SSL 认证
+### SSL证书
 
 <details>
-  <summary>点击查看 SSL 认证</summary>
+  <summary>点击查看SSL证书详情</summary>
 
-### Cloudflare
+### ACME
 
-管理脚本具有用于 Cloudflare 的内置 SSL 证书应用程序。若要使用此脚本申请证书，需要满足以下条件：
+使用ACME管理SSL证书：
 
-- Cloudflare 邮箱地址
-- Cloudflare Global API Key
-- 域名已通过 cloudflare 解析到当前服务器
+1. 确保您的域名正确解析到服务器。
+2. 在终端中运行 `x-ui` 命令，然后选择 `SSL证书管理`。
+3. 您将看到以下选项：
 
-**1:** 在终端中运行`x-ui`， 选择 `Cloudflare SSL Certificate`.
-
+   - **Get SSL:** 获取SSL证书。
+   - **Revoke:** 吊销现有的SSL证书。
+   - **Force Renew:** 强制更新SSL证书。
+   - **Show Existing Domains:** 显示服务器上所有可用的域证书。  
+   - **Set Certificate Paths for the Panel:** 指定用于面板的域证书。
 
 ### Certbot
-```
+
+安装并使用Certbot：
+
+```sh
 apt-get install certbot -y
 certbot certonly --standalone --agree-tos --register-unsafely-without-email -d yourdomain.com
 certbot renew --dry-run
 ```
 
-***Tip:*** *管理脚本具有 Certbot 。使用 `x-ui` 命令， 选择 `SSL Certificate Management`.*
+### Cloudflare
+
+管理脚本内置了Cloudflare的SSL证书申请。要使用此脚本申请证书，您需要以下信息：
+
+- Cloudflare注册的电子邮件
+- Cloudflare全局API密钥
+- 域名必须通过Cloudflare解析到当前服务器
+
+**如何获取Cloudflare全局API密钥：**
+
+1. 在终端中运行 `x-ui` 命令，然后选择 `Cloudflare SSL证书`。
+2. 访问链接：[Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens)。
+3. 点击“查看全局API密钥”（参见下图）：
+   ![](media/APIKey1.PNG)
+4. 您可能需要重新验证您的账户。之后将显示API密钥（参见下图）：
+   ![](media/APIKey2.png)
+
+使用时，只需输入您的 `域名`、`电子邮件` 和 `API密钥`。如下图所示：
+   ![](media/DetailEnter.png)
 
 </details>
 
@@ -160,7 +195,7 @@ systemctl restart x-ui
     docker compose up -d
    ```
 
-从Docker中删除3x-ui 
+从Docker中删除3x-ui
 
    ```sh
     docker stop 3x-ui
@@ -172,18 +207,59 @@ systemctl restart x-ui
 </details>
 
 
+## Nginx 设置
+<details>
+  <summary>点击查看 反向代理配置</summary>
+
+#### Nginx反向代理
+```nginx
+location / {
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Range $http_range;
+    proxy_set_header If-Range $http_if_range; 
+    proxy_redirect off;
+    proxy_pass http://127.0.0.1:2053;
+}
+```
+
+#### Nginx子路径
+- 确保 `/sub` 面板设置中的"面板url根路径"一致
+- 面板设置中的 `url` 需要以 `/` 结尾   
+
+```nginx
+location /sub {
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Range $http_range;
+    proxy_set_header If-Range $http_if_range; 
+    proxy_redirect off;
+    proxy_pass http://127.0.0.1:2053;
+}
+```
+</details>
+
 ## 建议使用的操作系统
 
 - Ubuntu 20.04+
 - Debian 11+
 - CentOS 8+
+- OpenEuler 22.03+
 - Fedora 36+
 - Arch Linux
+- Parch Linux
 - Manjaro
 - Armbian
-- AlmaLinux 9+
-- Rockylinux 9+
+- AlmaLinux 8.0+
+- Rocky Linux 8+
+- Oracle Linux 8+
 - OpenSUSE Tubleweed
+- Amazon Linux 2023
+- Windows x64
 
 ## 支持的架构和设备
 <details>
@@ -206,14 +282,18 @@ systemctl restart x-ui
 
 ## Languages
 
-- English（英语）
-- Farsi（伊朗语）
-- Chinese（中文）
-- Russian（俄语）
-- Vietnamese（越南语）
-- Spanish（西班牙语）
-- Indonesian （印度尼西亚语）
-- Ukrainian（乌克兰语）
+- English（英语）  
+- Persian（波斯语）  
+- Traditional Chinese（繁体中文）  
+- Simplified Chinese（简体中文）  
+- Japanese（日语）  
+- Russian（俄语）  
+- Vietnamese（越南语）  
+- Spanish（西班牙语）  
+- Indonesian（印尼语）  
+- Ukrainian（乌克兰语）  
+- Turkish（土耳其语）  
+- Português (Brazil)（葡萄牙语（巴西））
 
 
 ## Features
@@ -234,88 +314,103 @@ systemctl restart x-ui
 - 支持从面板导出/导入数据库
 
 
-## 默认设置
+## 默认面板设置
 
 <details>
-  <summary>点击查看 默认设置</summary>
+  <summary>点击查看默认设置详情</summary>
 
-  ### 信息
+### 用户名、密码、端口和 Web Base Path
 
+如果您选择不修改这些设置，它们将随机生成（不适用于 Docker）。
+
+**Docker 的默认设置：**
+- **用户名：** admin
+- **密码：** admin
 - **端口：** 2053
-- **用户名 & 密码：** 当您跳过设置时，此项会随机生成。
-- **数据库路径：**
-  - /etc/x-ui/x-ui.db
-- **Xray 配置路径：**
-  - /usr/local/x-ui/bin/config.json
-- **面板链接（无SSL）：**
-  - http://ip:2053/panel
-  - http://domain:2053/panel
-- **面板链接（有SSL）：**
-  - https://domain:2053/panel
- 
+
+### 数据库管理：
+
+  您可以直接在面板中方便地进行数据库备份和还原。
+
+- **数据库路径:**
+  - `/etc/x-ui/x-ui.db`
+
+### Web 基础路径
+
+1. **重置 Web 基础路径:**
+   - 打开终端。
+   - 运行 `x-ui` 命令。
+   - 选择 `重置 Web 基础路径` 选项。
+
+2. **生成或自定义路径:**
+   - 路径将会随机生成，或者您可以输入自定义路径。
+
+3. **查看当前设置:**
+   - 要查看当前设置，请在终端中使用 `x-ui settings` 命令，或在 `x-ui` 面板中点击 `查看当前设置`。
+
+### 安全建议：
+- 为了提高安全性，建议在URL结构中使用一个长的随机词。
+
+**示例：**
+- `http://ip:port/*webbasepath*/panel`
+- `http://domain:port/*webbasepath*/panel`
+
 </details>
 
 ## WARP 配置
 
 <details>
-  <summary>点击查看 WARP 配置</summary>
+  <summary>点击查看 WARP 配置详情</summary>
 
-#### 使用
+#### 使用方法
 
-如果要在 v2.1.0 之前使用 WARP 路由，请按照以下步骤操作：
+**对于 `v2.1.0` 及之后的版本：**
 
-**1.** 在 **SOCKS Proxy Mode** 模式中安装Wrap
-
-   ```sh
-   bash <(curl -sSL https://raw.githubusercontent.com/hamid-gh98/x-ui-scripts/main/install_warp_proxy.sh)
-   ```
-
-**2.** 如果您已经安装了 warp，您可以使用以下命令卸载：
-
-   ```sh
-   warp u
-   ```
-
-**3.** 在面板中打开您需要的配置
-
-   配置:
-
-   - Block Ads
-   - Route Google + Netflix + Spotify + OpenAI (ChatGPT) to WARP
-   - Fix Google 403 error
+WARP 已内置，无需额外安装。只需在面板中开启相关配置即可。
 
 </details>
 
 ## IP 限制
 
 <details>
-  <summary>点击查看 IP 限制</summary>
+  <summary>点击查看 IP 限制详情</summary>
 
-#### 使用
+#### 使用方法
 
-**注意：** 使用 IP 隧道时，IP 限制无法正常工作。
+**注意:** 当使用 IP 隧道时，IP 限制将无法正常工作。
 
-- 适用于最高 `v1.6.1` ：
+- **对于 `v1.6.1` 及之前的版本：**
+  - IP 限制功能已内置于面板中。
 
-  - IP 限制 已被集成在面板中。
+**对于 `v1.7.0` 及更新的版本：**
 
-- 适用于 `v1.7.0` 以及更新的版本：
+要启用 IP 限制功能，您需要安装 `fail2ban` 及其所需的文件，步骤如下：
 
-  - 要使 IP 限制正常工作，您需要按照以下步骤安装 fail2ban 及其所需的文件：
+1. 在终端中运行 `x-ui` 命令，然后选择 `IP 限制管理`。
+2. 您将看到以下选项：
 
-    1. 使用面板内置的 `x-ui` 指令
-    2. 选择 `IP Limit Management`.
-    3. 根据您的需要选择合适的选项。
-   
-  - 确保您的 Xray 配置上有 ./access.log 。在 v2.1.3 之后，我们有一个选项。
-  
-  ```sh
+   - **更改封禁时长:** 调整封禁时长。
+   - **解除所有封禁:** 解除当前的所有封禁。
+   - **查看日志:** 查看日志。
+   - **Fail2ban 状态:** 检查 `fail2ban` 的状态。
+   - **重启 Fail2ban:** 重启 `fail2ban` 服务。
+   - **卸载 Fail2ban:** 卸载带有配置的 Fail2ban。
+
+3. 在面板中通过设置 `Xray 配置/log/访问日志` 为 `./access.log` 添加访问日志路径，然后保存并重启 Xray。
+
+- **对于 `v2.1.3` 之前的版本：**
+  - 您需要在 Xray 配置中手动设置访问日志路径：
+
+    ```sh
     "log": {
       "access": "./access.log",
       "dnsLog": false,
       "loglevel": "warning"
     },
-  ```
+    ```
+
+- **对于 `v2.1.3` 及之后的版本：**
+  - 面板中直接提供了配置 `access.log` 的选项。
 
 </details>
 
@@ -366,7 +461,7 @@ Web 面板通过 Telegram Bot 支持每日流量、面板登录、数据库备�
 
 - 与 [Botfather](https://t.me/BotFather) 对话：
     ![Botfather](./media/botfather.png)
-  
+
 - 使用 /newbot 创建新机器人：你需要提供机器人名称以及用户名，注意名称中末尾要包含“bot”
     ![创建机器人](./media/newbot.png)
 
@@ -391,6 +486,7 @@ Web 面板通过 Telegram Bot 支持每日流量、面板登录、数据库备�
 
 #### 使用
 
+- [API 文档](https://www.postman.com/hsanaei/3x-ui/collection/q1l5l0u/3x-ui)
 - `/login` 使用 `POST` 用户名称 & 密码： `{username: '', password: ''}` 登录
 - `/panel/api/inbounds` 以下操作的基础：
 
@@ -420,9 +516,7 @@ Web 面板通过 Telegram Bot 支持每日流量、面板登录、数据库备�
 - `client.password`  TROJAN
 - `client.email`  Shadowsocks
 
-
-- [API 文档](https://documenter.getpostman.com/view/16802678/2s9YkgD5jm)
-- [<img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;">](https://app.getpostman.com/run-collection/16802678-1a4c9270-ac77-40ed-959a-7aa56dc4a415?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D16802678-1a4c9270-ac77-40ed-959a-7aa56dc4a415%26entityType%3Dcollection%26workspaceId%3D2cd38c01-c851-4a15-a972-f181c23359d9)
+- [<img src="https://run.pstmn.io/button.svg" alt="Run In Postman" style="width: 128px; height: 32px;">](https://app.getpostman.com/run-collection/5146551-dda3cab3-0e33-485f-96f9-d4262f437ac5?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D5146551-dda3cab3-0e33-485f-96f9-d4262f437ac5%26entityType%3Dcollection%26workspaceId%3Dd64f609f-485a-4951-9b8f-876b3f917124)
 </details>
 
 ## 环境变量
@@ -450,13 +544,34 @@ XUI_BIN_FOLDER="bin" XUI_DB_FOLDER="/etc/x-ui" go build main.go
 
 ## 预览
 
-![1](./media/1.png)
-![2](./media/2.png)
-![3](./media/3.png)
-![4](./media/4.png)
-![5](./media/5.png)
-![6](./media/6.png)
-![7](./media/7.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./media/01-overview-dark.png">
+  <img alt="3x-ui" src="./media/01-overview-light.png">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./media/02-inbounds-dark.png">
+  <img alt="3x-ui" src="./media/02-inbounds-light.png">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./media/03-add-inbound-dark.png">
+  <img alt="3x-ui" src="./media/03-add-inbound-light.png">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./media/04-add-client-dark.png">
+  <img alt="3x-ui" src="./media/04-add-client-light.png">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./media/05-settings-dark.png">
+  <img alt="3x-ui" src="./media/05-settings-light.png">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./media/06-configs-dark.png">
+  <img alt="3x-ui" src="./media/06-configs-light.png">
+</picture>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./media/07-bot-dark.png">
+  <img alt="3x-ui" src="./media/07-bot-light.png">
+</picture>
 
 ## 特别感谢
 
@@ -465,8 +580,8 @@ XUI_BIN_FOLDER="bin" XUI_DB_FOLDER="/etc/x-ui" go build main.go
 ## 致谢
 
 - [Iran v2ray rules](https://github.com/chocolate4u/Iran-v2ray-rules) (License: **GPL-3.0**): _Enhanced v2ray/xray and v2ray/xray-clients routing rules with built-in Iranian domains and a focus on security and adblocking._
-- [Vietnam Adblock rules](https://github.com/vuong2023/vn-v2ray-rules) (License: **GPL-3.0**): _A hosted domain hosted in Vietnam and blocklist with the most efficiency for Vietnamese._
+- [Russia v2ray rules](https://github.com/runetfreedom/russia-v2ray-rules-dat) (License: **GPL-3.0**): _This repository contains automatically updated V2Ray routing rules based on data on blocked domains and addresses in Russia._
 
 ## Star趋势
 
-[![Stargazers over time](https://starchart.cc/MHSanaei/3x-ui.svg)](https://starchart.cc/MHSanaei/3x-ui)
+[![Stargazers over time](https://starchart.cc/MHSanaei/3x-ui.svg?variant=adaptive)](https://starchart.cc/MHSanaei/3x-ui)

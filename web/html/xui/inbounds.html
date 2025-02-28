@@ -15,7 +15,7 @@
     overflow-y: hidden;
   }
   .ant-table .ant-table-content .ant-table-tbody tr:last-child .ant-table-wrapper {
-	  margin:-10px 22px -10px !important;
+	  margin:-10px 22px !important;
   }
   .ant-table .ant-table-content .ant-table-tbody tr:last-child .ant-table-wrapper .ant-table {
     border-bottom-left-radius: 1rem;
@@ -40,7 +40,7 @@
       padding: .5rem;
     }
     .ant-table .ant-table-content .ant-table-tbody tr:last-child .ant-table-wrapper {
-	    margin:-10px 2px -10px !important;
+	    margin:-10px 2px !important;
     }
   }
   .ant-col-sm-24 {
@@ -338,7 +338,6 @@
                 <template v-if="dbInbound.isVMess || dbInbound.isVLess || dbInbound.isTrojan || dbInbound.isSS">
                   <a-tag style="margin:0;" color="green">[[ dbInbound.toInbound().stream.network ]]</a-tag>
                   <a-tag style="margin:0;" v-if="dbInbound.toInbound().stream.isTls" color="blue">TLS</a-tag>
-                  <a-tag style="margin:0;" v-if="dbInbound.toInbound().stream.isXtls" color="blue">XTLS</a-tag>
                   <a-tag style="margin:0;" v-if="dbInbound.toInbound().stream.isReality" color="blue">Reality</a-tag>
                 </template>
               </template>
@@ -403,8 +402,11 @@
               </template>
               <template slot="expiryTime" slot-scope="text, dbInbound">
                 <a-popover v-if="dbInbound.expiryTime > 0" :overlay-class-name="themeSwitcher.currentTheme">
-                  <template slot="content">
+                  <template slot="content" v-if="app.datepicker === 'gregorian'">
                     [[ DateUtil.formatMillis(dbInbound.expiryTime) ]]
+                  </template>
+                  <template v-else slot="content">
+                    [[ DateUtil.convertToJalalian(moment(dbInbound.expiryTime)) ]]
                   </template>
                   <a-tag style="min-width: 50px;" :color="usageColor(new Date().getTime(), app.expireDiff, dbInbound._expiryTime)">
                     [[ remainedDays(dbInbound._expiryTime) ]]
@@ -498,8 +500,14 @@
                       <tr>
                         <td>{{ i18n "pages.inbounds.expireDate" }}</td>
                         <td>
-                          <a-tag style="min-width: 50px; text-align: center;" v-if="dbInbound.expiryTime > 0" :color="dbInbound.isExpiry? 'red': 'blue'">
-                            [[ DateUtil.formatMillis(dbInbound.expiryTime) ]]
+                          <a-tag style="min-width: 50px; text-align: center;" v-if="dbInbound.expiryTime > 0"
+                            :color="dbInbound.isExpiry? 'red': 'blue'">
+                            <template v-if="app.datepicker === 'gregorian'">
+                              [[ DateUtil.formatMillis(dbInbound.expiryTime) ]]
+                            </template>
+                            <template v-else>
+                              [[ DateUtil.convertToJalalian(moment(dbInbound.expiryTime)) ]]
+                            </template>
                           </a-tag>
                           <a-tag v-else style="text-align: center;" color="purple" class="infinite-tag">
                             <svg height="10px" width="14px" viewBox="0 0 640 512" fill="currentColor">
@@ -540,7 +548,7 @@
 <script src="{{ .base_path }}assets/qrcode/qrious2.min.js?{{ .cur_ver }}"></script>
 <script src="{{ .base_path }}assets/clipboard/clipboard.min.js?{{ .cur_ver }}"></script>
 <script src="{{ .base_path }}assets/uri/URI.min.js?{{ .cur_ver }}"></script>
-<script src="{{ .base_path }}assets/js/model/xray.js?{{ .cur_ver }}"></script>
+<script src="{{ .base_path }}assets/js/model/inbound.js?{{ .cur_ver }}"></script>
 <script src="{{ .base_path }}assets/js/model/dbinbound.js?{{ .cur_ver }}"></script>
 {{template "component/themeSwitcher" .}}
 {{template "component/persianDatepicker" .}}
@@ -664,7 +672,7 @@
             tgBotEnable: false,
             showAlert: false,
             ipLimitEnable: false,
-            pageSize: 0,
+            pageSize: 50,
             isMobile: window.innerWidth <= 768,
         },
         methods: {
@@ -724,7 +732,7 @@
                     this.inbounds.push(to_inbound);
                     this.dbInbounds.push(dbInbound);
                     if ([Protocols.VMESS, Protocols.VLESS, Protocols.TROJAN, Protocols.SHADOWSOCKS].includes(inbound.protocol)) {
-                        if (inbound.protocol === Protocols.SHADOWSOCKS && (!to_inbound.isSSMultiUser)) {
+                        if (dbInbound.isSS && (!to_inbound.isSSMultiUser)) {
                             continue;
                         }
                         this.clientCount[inbound.id] = this.getClientCounts(inbound, to_inbound);
@@ -926,6 +934,7 @@
                     settings: Inbound.Settings.getSettings(baseInbound.protocol).toString(),
                     streamSettings: baseInbound.stream.toString(),
                     sniffing: baseInbound.sniffing.toString(),
+                    allocate: baseInbound.allocate.toString(),
                 };
                 await this.submit('/panel/inbound/add', data, inModal);
             },
@@ -971,6 +980,7 @@
                 };
                 if (inbound.canEnableStream()) data.streamSettings = inbound.stream.toString();
                 data.sniffing = inbound.sniffing.toString();
+                data.allocate = inbound.allocate.toString();
 
                 await this.submit('/panel/inbound/add', data, inModal);
             },
@@ -990,6 +1000,7 @@
                 };
                 if (inbound.canEnableStream()) data.streamSettings = inbound.stream.toString();
                 data.sniffing = inbound.sniffing.toString();
+                data.allocate = inbound.allocate.toString();
 
                 await this.submit(`/panel/inbound/update/${dbInbound.id}`, data, inModal);
             },
@@ -1096,6 +1107,36 @@
                 } else {
                     this.submit(`/panel/inbound/${dbInboundId}/delClient/${clientId}`);
                 }
+            },
+            getSubGroupClients(dbInbounds, currentClient) {
+                const response = {
+                  inbounds: [],
+                  clients: [],
+                  editIds: []
+                }
+                if (dbInbounds && dbInbounds.length > 0 && currentClient) {
+                    dbInbounds.forEach((dbInboundItem) => {
+                        const dbInbound = new DBInbound(dbInboundItem);
+                        if (dbInbound) {
+                            const inbound = dbInbound.toInbound();
+                            if (inbound) {
+                                const clients = inbound.clients;
+                                if (clients.length > 0) {
+                                    clients.forEach((client) => {
+                                        if (client['subId'] === currentClient['subId']) {
+                                            client['inboundId'] = dbInboundItem.id
+                                            client['clientId'] = this.getClientId(dbInbound.protocol, client)
+                                            response.inbounds.push(dbInboundItem.id)
+                                            response.clients.push(client)
+                                            response.editIds.push(client['clientId'])
+                                        }
+                                    })
+                                }
+                            }
+                        }
+                    })
+                }
+                return response;
             },
             getClientId(protocol, client) {
                 switch (protocol) {
@@ -1299,7 +1340,7 @@
                 if (clients != null){
                     clients.forEach(c => {
                         if (c.subId && c.subId.length>0){
-                            subLinks.push(this.subSettings.subURI + c.subId + "?name=" + c.subId)
+                            subLinks.push(this.subSettings.subURI + c.subId)
                         }
                     })
                 }
@@ -1326,7 +1367,7 @@
                     if (clients != null){
                         clients.forEach(c => {
                             if (c.subId && c.subId.length>0){
-                                subLinks.push(this.subSettings.subURI + c.subId + "?name=" + c.subId)
+                                subLinks.push(this.subSettings.subURI + c.subId)
                             }
                         })
                     }
